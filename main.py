@@ -6,8 +6,6 @@ import collections
 def main():
     df = get_dataframe("test-statement.pdf")
     
-    df.to_csv()
-    
 def get_dataframe(filename):
     with pp.open(filename) as pdf:
         bank_line = collections.namedtuple("bank_line", "Date TransactionType TransactionDetails WD Balance")
@@ -28,8 +26,16 @@ def get_dataframe(filename):
                 
                 bal = opening_balance_pattern.search(line) #obtain the opening blance of that page 
                 if bal:
-                    print(bal)
                     opening_balance.append(bal.group(1))
+                
+                year = year_pattern.search(line) #obtains the lines from the bank statement where there is statement period format for that line should be "Statement period 10 Mar 2023 - 09 Jun 2023"
+                if year:
+                    print(year)
+                    start_date = year.group(1) #this should obtain the first part of the line eg just the 10 Dec 2022 as opposed to the 09 Mar 2023
+                    print(start_date)
+                    current_year = int(start_date.split()[-1])
+                    print(current_year)
+                    
                     
     return
 
