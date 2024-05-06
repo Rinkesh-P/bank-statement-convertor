@@ -31,20 +31,29 @@ def get_dataframe(filename):
                 year = year_pattern.search(line) #obtains the lines from the bank statement where there is statement period format for that line should be "Statement period 10 Mar 2023 - 09 Jun 2023"
                 if year:
                     start_date = year.group(1) #this should obtain the first part of the line eg just the 10 Dec 2022 as opposed to the 09 Mar 2023
-                    current_year = int(start_date.split()[-1]) #apply the current year to the current_year variable 
+                    current_year = int(start_date.split()[-1]) #apply the current year to the current_year variable so that it can be picked up if the datemonth is going to be decemeber and the next month is jan then can iterate current year and store actual year 
                     
                 match = pattern.search(line)
                 if match:
                     #print(match)
-                    print(match.group(1))
-                    print(match.group(2))
-                    print(match.group(3))
-                    print(match.group(4))
+                    # print(match.group(1)) #gets the dates
+                    # print(match.group(2)) #gets the transaction type
+                    # print(match.group(3)) #gets the transaction details
+                    # print(match.group(4)) #gets the amount for that transaction havent identified if withdrawl or deposit yet 
+                    # print(match.group(5)) #gets the balance at the end 
                     
-
-
+                    date_month = match.group(1).split()[1] #splitting it so that I get only the month eg Sep, Mat etc 
+                    if current_month == "Dec" and date_month == "Jan": #if the current month is Dec and the date month is Jan then it means that the current month year is 2022 however the datemonth if its Jan then the year for that month is 2023
+                        current_year += 1 #current year will go up by 1 if the current month is Dec and the date month is jan
+                    current_month = date_month #current month becomes date month 
                     
+                    date = match.group(1) + " " + str(current_year) #when adding to the named tuple ensuring that the format is month year eg Mar 2022
+                    transactiontype = match.group(2) 
+                    transactiondetails = match.group(3)
+                    Withdrawl_deposit = match.group(4).replace(",","") #although not on my statement it is a possibility that a there is a withdrawl or deposit of > 999 in which case a comma would be used to seperate it eg 1,000
+                    balance = re.sub("[A-Za-z]","",match.group(5).replace(",","")) #replace all commas and any alpha variables. Although not in my statement I have seen statements where when overdraft there is a alphabet in there
                     
+                    bank_line_items.append(bank_line(date,transactiontype,transactiondetails,Withdrawl_deposit,balance))
                     
     return
 
