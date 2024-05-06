@@ -1,5 +1,5 @@
 # bank-statement-convertor
-<br>Converting my own bank statement into a tabular form so that I can analyse it more easily and create a financial dashboard. 
+<br>Converting my own bank statement into a tabular (CSV) format so that I can analyse the data and create a financial dashboard using tableau  
 
 <br>Steps to get started:
 
