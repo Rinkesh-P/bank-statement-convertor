@@ -5,6 +5,8 @@ import collections
 
 def main():
     df = get_dataframe("test-statement.pdf")
+    print(df.head(10))
+    df.to_csv('statement.csv')
     
 def get_dataframe(filename):
     with pp.open(filename) as pdf:
@@ -18,6 +20,7 @@ def get_dataframe(filename):
         opening_balance = []
         current_year = 0
         current_month = ''
+        df = pd.DataFrame()
         
         for page in pdf.pages: #for loop to iterate through all of the pages in the document
             text = page.extract_text() #extract the text from each page 
@@ -73,10 +76,11 @@ def get_dataframe(filename):
         df = df[["Date","TransactionType","TransactionDetails","Withdrawals","Deposits","Balance"]]
         df = df.fillna(0)
         
-        print(df.head(10))
+        df['Date'] = pd.to_datetime(df["Date"], format ='%d %b %Y')
+        df['Balance'] = pd.to_numeric(df["Balance"])
+        df[['TransactionType', 'TransactionDetails']] = df[['TransactionType', 'TransactionDetails']].astype(str)
         
-        
-    return 
+    return df 
     
 
 
