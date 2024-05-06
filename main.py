@@ -63,11 +63,19 @@ def get_dataframe(filename):
         count = 0
         for i in bank_line_items: #for loop to find out if the balance contains a withdrawal or deposit if opening balance is
             if openingBalance > float(i[4]): #if the opening balance is > balance of the next line then we have a withdrawal otherwise deposit. 
-                df.at[count, "Withdrawals"] = i[3]
+                df.at[count, "Withdrawals"] = float(i[3])
             else:
-                df.at[count, "Deposits"] = i[3]
+                df.at[count, "Deposits"] = float(i[3])
             openingBalance = float(i[4])
             count += 1
+            
+        df = df.drop("WD", axis=1)
+        df = df[["Date","TransactionType","TransactionDetails","Withdrawals","Deposits","Balance"]]
+        df = df.fillna(0)
+        
+        print(df.head(10))
+        
+        
     return 
     
 
