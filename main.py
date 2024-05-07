@@ -3,24 +3,24 @@ import pdfplumber as pp
 import re
 import collections
 
+opening_balance_pattern = re.compile(r'^\d{2} \w{3} Openingbalance (\d+(?:\.\d+)?)$') #opening balance pattern may be greater than current balance and it could have a comma to sepearte if amount is in thousands or higher
+pattern = re.compile(r'^(\d{2} \w{3}) ((?:\w{2} ))((?:\S+\s)*\S+)\s([\d,.]+)\s([\d,.]+\s*\w*)$') #pattern to get statement lines
+year_pattern = re.compile(r'Statementperiod (\d{2} \w{3} \d{4}) - (\d{2} \w{3} \d{4})') #pattern to get the statement period year
+
 def main():
     df = get_dataframe("test-statement.pdf")
-    print(df.head(10))
-    df.to_csv('statement.csv')
+    #print(df.head(10))
+    #df.to_csv('statement.csv')
     
 def get_dataframe(filename):
     with pp.open(filename) as pdf:
         bank_line = collections.namedtuple("bank_line", "Date TransactionType TransactionDetails WD Balance")
         bank_line_items = []
-        
-        opening_balance_pattern = re.compile(r'^\d{2} \w{3} Openingbalance (\d+(?:\.\d+)?)$') #opening balance pattern may be greater than current balance and it could have a comma to sepearte if amount is in thousands or higher
-        pattern = re.compile(r'^(\d{2} \w{3}) ((?:\w{2} ))((?:\S+\s)*\S+)\s([\d,.]+)\s([\d,.]+\s*\w*)$') #pattern to get statement lines
-        year_pattern = re.compile(r'Statementperiod (\d{2} \w{3} \d{4}) - (\d{2} \w{3} \d{4})') #pattern to get the statement period year
-        
+
         opening_balance = []
         current_year = 0
         current_month = ''
-        df = pd.DataFrame()
+        
         
         for page in pdf.pages: #for loop to iterate through all of the pages in the document
             text = page.extract_text() #extract the text from each page 
@@ -63,25 +63,32 @@ def get_dataframe(filename):
         
         #print(df.info()) #find out the data type of all of the columns. 
         
-        count = 0
-        for i in bank_line_items: #for loop to find out if the balance contains a withdrawal or deposit if opening balance is
-            if openingBalance > float(i[4]): #if the opening balance is > balance of the next line then we have a withdrawal otherwise deposit. 
-                df.at[count, "Withdrawals"] = float(i[3])
+        # count = 0
+        # for i in bank_line_items: #for loop to find out if the balance contains a withdrawal or deposit if opening balance is
+        #     if openingBalance > float(i[4]): #if the opening balance is > balance of the next line then we have a withdrawal otherwise deposit. 
+        #         df.at[count, "Withdrawals"] = float(i[3])
+        #     else:
+        #         df.at[count, "Deposits"] = float(i[3])
+        #     openingBalance = float(i[4])
+        #     count += 1
+
+        for index,row in df.iterrows():
+            if openingBalance > float(row['Balance']):
+                df.at[index, "Withdrawals"] = row['WD']
             else:
-                df.at[count, "Deposits"] = float(i[3])
-            openingBalance = float(i[4])
-            count += 1
-            
-        df = df.drop("WD", axis=1)
-        df = df[["Date","TransactionType","TransactionDetails","Withdrawals","Deposits","Balance"]]
-        df = df.fillna(0)
+                df.at[index, "Deposits"] = row['WD']
+            openingBalance = float(row['Balance'])
+                
+        df = df.drop("WD", axis=1) #remove the WD column as withdrawals and deposits are now seperate 
+        df = df[["Date","TransactionType","TransactionDetails","Withdrawals","Deposits","Balance"]] #re arranging the columns so that balance is at the end
         
-        df['Date'] = pd.to_datetime(df["Date"], format ='%d %b %Y')
+        df = df.fillna(0) #is there are any null values then replace it with 0
+        
+        df['Date'] = pd.to_datetime(df["Date"], format ='%d %b %Y') #change the format of the data type in the columns so its easier to work with in excel
         df['Balance'] = pd.to_numeric(df["Balance"])
         df[['TransactionType', 'TransactionDetails']] = df[['TransactionType', 'TransactionDetails']].astype(str)
         
     return df 
-    
 
 
 main() 
