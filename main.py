@@ -38,12 +38,6 @@ def get_dataframe(filename):
                     
                 match = pattern.search(line)
                 if match:
-                    #print(match)
-                    # print(match.group(1)) #gets the dates
-                    # print(match.group(2)) #gets the transaction type
-                    # print(match.group(3)) #gets the transaction details
-                    # print(match.group(4)) #gets the amount for that transaction havent identified if withdrawl or deposit yet 
-                    # print(match.group(5)) #gets the balance at the end 
                     
                     date_month = match.group(1).split()[1] #splitting it so that I get only the month eg Sep, Mat etc 
                     if current_month == "Dec" and date_month == "Jan": #if the current month is Dec and the date month is Jan then it means that the current month year is 2022 however the datemonth if its Jan then the year for that month is 2023
@@ -60,17 +54,6 @@ def get_dataframe(filename):
         
         df = pd.DataFrame(bank_line_items)
         openingBalance = float(opening_balance[0]) 
-        
-        #print(df.info()) #find out the data type of all of the columns. 
-        
-        # count = 0
-        # for i in bank_line_items: #for loop to find out if the balance contains a withdrawal or deposit if opening balance is
-        #     if openingBalance > float(i[4]): #if the opening balance is > balance of the next line then we have a withdrawal otherwise deposit. 
-        #         df.at[count, "Withdrawals"] = float(i[3])
-        #     else:
-        #         df.at[count, "Deposits"] = float(i[3])
-        #     openingBalance = float(i[4])
-        #     count += 1
 
         for index,row in df.iterrows():
             if openingBalance > float(row['Balance']):
