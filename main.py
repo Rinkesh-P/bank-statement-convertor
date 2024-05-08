@@ -6,7 +6,7 @@ import collections
 opening_balance_pattern = re.compile(r'^\d{2} \w{3} Openingbalance (\d+(?:\.\d+)?)$') #opening balance pattern may be greater than current balance and it could have a comma to sepearte if amount is in thousands or higher
 pattern = re.compile(r'^(\d{2} \w{3}) ((?:\w{2} ))((?:\S+\s)*\S+)\s([\d,.]+)\s([\d,.]+\s*\w*)$') #pattern to get statement lines
 year_pattern = re.compile(r'Statementperiod (\d{2} \w{3} \d{4}) - (\d{2} \w{3} \d{4})') #pattern to get the statement period year
-remove_pattern = re.compile(r'\d{2}-\d{4}-\d{7}-\d{2} DEBIT TRANSFER')
+remove_pattern = re.compile(r'\d{2}-\d{4}-\d{7}-\d{2} DEBIT TRANSFER') #pattern to detect which transaction is just me transferring money into my savings account. 
 
 def main():
     df = get_dataframe("test-statement.pdf")
@@ -51,7 +51,7 @@ def get_dataframe(filename):
                     Withdrawl_deposit = match.group(4).replace(",","") #although not on my statement it is a possibility that a there is a withdrawl or deposit of > 999 in which case a comma would be used to seperate it eg 1,000
                     balance = re.sub("[A-Za-z]","",match.group(5).replace(",","")) #replace all commas and any alpha variables. Although not in my statement I have seen statements where when overdraft there is a alphabet in there
                     
-                    if not remove_pattern.match(transactiondetails):
+                    if not remove_pattern.match(transactiondetails): #some of the withdrawals are just me transferring money into my savings account so this is here to ensure that the record of me just transferring money isnt in the csv file as i only want to analyse my spendings.
                         bank_line_items.append(bank_line(date,transactiontype,transactiondetails,Withdrawl_deposit,balance))
                     
         
