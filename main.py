@@ -6,11 +6,12 @@ import collections
 opening_balance_pattern = re.compile(r'^\d{2} \w{3} Openingbalance (\d+(?:\.\d+)?)$') #opening balance pattern may be greater than current balance and it could have a comma to sepearte if amount is in thousands or higher
 pattern = re.compile(r'^(\d{2} \w{3}) ((?:\w{2} ))((?:\S+\s)*\S+)\s([\d,.]+)\s([\d,.]+\s*\w*)$') #pattern to get statement lines
 year_pattern = re.compile(r'Statementperiod (\d{2} \w{3} \d{4}) - (\d{2} \w{3} \d{4})') #pattern to get the statement period year
+remove_pattern = re.compile(r'\d{2}-\d{4}-\d{7}-\d{2} DEBIT TRANSFER')
 
 def main():
     df = get_dataframe("test-statement.pdf")
     #print(df.head(10))
-    df.to_csv('statement.csv')
+    df.to_csv('statement1.csv')
     
 def get_dataframe(filename):
     with pp.open(filename) as pdf:
@@ -50,7 +51,9 @@ def get_dataframe(filename):
                     Withdrawl_deposit = match.group(4).replace(",","") #although not on my statement it is a possibility that a there is a withdrawl or deposit of > 999 in which case a comma would be used to seperate it eg 1,000
                     balance = re.sub("[A-Za-z]","",match.group(5).replace(",","")) #replace all commas and any alpha variables. Although not in my statement I have seen statements where when overdraft there is a alphabet in there
                     
-                    bank_line_items.append(bank_line(date,transactiontype,transactiondetails,Withdrawl_deposit,balance))
+                    if not remove_pattern.match(transactiondetails):
+                        bank_line_items.append(bank_line(date,transactiontype,transactiondetails,Withdrawl_deposit,balance))
+                    
         
         df = pd.DataFrame(bank_line_items)
         openingBalance = float(opening_balance[0]) 
